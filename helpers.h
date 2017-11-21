@@ -96,6 +96,14 @@ _PyErr_SetFromErrnoWithFilenameAndChain(const char *filename);
 #define _PyTuple_ITEMS(op) (((PyTupleObject *)(op))->ob_item)
 
 
+/* alloc helpers */
+
+PyObject *
+__PyObject_GC_New(PyTypeObject *type);
+
+#define __PyObject_Alloc(type, typeobj) ((type *)__PyObject_GC_New((typeobj)))
+
+
 /* bytearray helpers */
 
 #ifndef _Py_MIN_ALLOC

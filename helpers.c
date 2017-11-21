@@ -154,6 +154,21 @@ _PyErr_SetFromErrnoWithFilenameAndChain(const char *filename)
 }
 
 
+/* alloc helpers */
+
+/* the std _PyObject_GC_New doesn't memset -> segfault when subclassing */
+PyObject *
+__PyObject_GC_New(PyTypeObject *type)
+{
+    PyObject *self = NULL;
+
+    if (!(self = _PyObject_GC_Calloc(_PyObject_SIZE(type)))) {
+        return PyErr_NoMemory();
+    }
+    return PyObject_INIT(self, type);
+}
+
+
 /* bytearray helpers */
 
 #ifndef _PY_INLINE_HELPERS

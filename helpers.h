@@ -1,81 +1,66 @@
-/*
-    Copyright © 2017 Malek Hadj-Ali
-
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
+#ifndef Py_MOOD_HELPERS_H
+#define Py_MOOD_HELPERS_H
 
 
-#ifndef _Py_HELPERS_H
-#define _Py_HELPERS_H
+#define PY_SSIZE_T_CLEAN
+#include "Python.h"
+
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 
-#ifdef _PY_INLINE_HELPERS
-#define _Py_INLINE(type) static inline type
-#else
-#define _Py_INLINE(type) type
-#endif
+/* sys/lib call helpers ----------------------------------------------------- */
+
+#define __sys_debug__(fmt, ...) \
+    printf("[%s:%d] " fmt, __FILE__, __LINE__, ##__VA_ARGS__)
 
 
-/* module init helpers */
+#define __sys_wrap__(t, fn, ...) (t)fn(__VA_ARGS__)
 
-int
-_PyModule_AddType(PyObject *module, const char *name, PyTypeObject *type);
-
-int
-_PyModule_AddTypeWithBase(PyObject *module, const char *name,
-                          PyTypeObject *type, PyTypeObject *base);
-
-int
-_PyModule_AddNewException(PyObject *module, const char *name,
-                          PyObject *base, PyObject *dict, PyObject **result);
-
-#define _PyModule_AddIntMacro(m, c) \
-    PyModule_AddIntConstant((m), #c, (int)(c))
-
-#define _PyModule_AddUnsignedIntMacro(m, c) \
-    PyModule_AddIntConstant((m), #c, (unsigned int)(c))
+#define __sys_gil_wrap__(t, fn, ...) \
+    ( \
+        { \
+            PyThreadState *_save_ = PyEval_SaveThread(); \
+            t _res_ = __sys_wrap__(t, fn, __VA_ARGS__); \
+            PyEval_RestoreThread(_save_); \
+            (_res_); \
+        } \
+    )
 
 
-/* module state helpers */
+/* pyport.h ----------------------------------------------------------------- */
 
-void *
-_PyModule_GetState(PyObject *module);
+#if !defined(_Py_CAST)
+#define _Py_CAST(type, expr) ((type)expr)
+#endif /* _Py_CAST */
 
-void *
-_PyModuleDef_GetState(PyModuleDef *def);
+#if !defined(_Py_FUNC_CAST)
+#define _Py_FUNC_CAST(type, func) _Py_CAST(type, _Py_CAST(void(*)(void), func))
+#endif /* _Py_FUNC_CAST */
 
-
-/* err helpers */
-
-PyObject *
-_PyErr_SetFromErrnoWithFilename(const char *filename);
-
-PyObject *
-_PyErr_SetFromErrnoWithFilenameAndChain(const char *filename);
-
-#define _PyErr_SetFromErrno() \
-    _PyErr_SetFromErrnoWithFilename(NULL)
-
-#define _PyErr_SetFromErrnoAndChain() \
-    _PyErr_SetFromErrnoWithFilenameAndChain(NULL)
+#if !defined(_PyCFunction_CAST)
+#define _PyCFunction_CAST(func) _Py_FUNC_CAST(PyCFunction, func)
+#endif /* _PyCFunction_CAST */
 
 
-/* misc helpers */
+/* misc helpers ------------------------------------------------------------- */
+
+#define _PyTuple_ITEMS(op) (((PyTupleObject *)(op))->ob_item)
+#define _PyList_ITEMS(op) (((PyListObject *)(op))->ob_item)
+
+
+#define _Py_PROTECTED_ATTRIBUTE(v, r) \
+    do { \
+        if ((v) == NULL) { \
+            PyErr_SetString(PyExc_AttributeError, "cannot delete attribute"); \
+            return (r); \
+        } \
+    } while (0)
+
+int _Py_READONLY_ATTRIBUTE(PyObject *self, PyObject *value, void *closure);
+
 
 #define _Py_SET_MEMBER(m, op) \
     do { \
@@ -85,36 +70,80 @@ _PyErr_SetFromErrnoWithFilenameAndChain(const char *filename);
         Py_XDECREF(_py_tmp); \
     } while (0)
 
-#define _Py_RETURN_OBJECT(op) \
-    do { \
-        PyObject *_py_res = (PyObject *)(op); \
-        return Py_INCREF(_py_res), _py_res; \
-    } while (0)
 
-#define _PyDict_GET_SIZE(op) (((PyDictObject *)(op))->ma_used)
+/* module init helpers ------------------------------------------------------ */
 
-#define _PyTuple_ITEMS(op) (((PyTupleObject *)(op))->ob_item)
+#define _PyModule_AddIntConstant(m, n, v) \
+    PyModule_AddIntConstant((m), (n), (int)(v))
+
+#define _PyModule_AddUnsignedIntConstant(m, n, v) \
+    PyModule_AddIntConstant((m), (n), (unsigned int)(v))
+
+#define _PyModule_AddIntMacro(m, c) \
+    _PyModule_AddIntConstant((m), #c, (c))
+
+#define _PyModule_AddUnsignedIntMacro(m, c) \
+    _PyModule_AddUnsignedIntConstant((m), #c, (c))
 
 
-/* bytearray helpers */
+int _PyType_ReadyWithBase(PyTypeObject *type, PyTypeObject *base);
 
-#ifndef _Py_MIN_ALLOC
-#define _Py_MIN_ALLOC 8
-#endif
+int _PyModule_AddTypeWithBase(
+    PyObject *module, PyTypeObject *type, PyTypeObject *base
+);
 
-#ifdef _PY_INLINE_HELPERS
-#include "bytearray.inl"
-#else
-int
-__PyByteArray_Grow(PyByteArrayObject *self, Py_ssize_t size, const char *bytes);
+int _PyModule_AddNewException(
+    PyObject *module,
+    const char *name,
+    const char *module_name,
+    PyObject *base,
+    PyObject *dict,
+    PyObject **result
+);
 
-int
-__PyByteArray_Shrink(PyByteArrayObject *self, Py_ssize_t size);
-#endif
+int _PyModule_AddTypeFromSpec(
+    PyObject *module, PyType_Spec *spec, PyObject *bases, PyObject **result
+);
+
+
+/* module state helpers ----------------------------------------------------- */
+
+void *__PyModule_GetState__(PyObject *module);
+
+void *__PyModuleDef_GetState__(PyModuleDef *def);
+
+void *__PyObject_GetState__(PyObject *self);
+
+
+/* err helpers -------------------------------------------------------------- */
+
+PyObject *_PyErr_SetFromErrnoWithFilename(const char *filename);
+
+PyObject *_PyErr_SetFromErrnoWithFilenameAndChain(const char *filename);
+
+#define _PyErr_SetFromErrno() \
+    _PyErr_SetFromErrnoWithFilename(NULL)
+
+#define _PyErr_SetFromErrnoAndChain() \
+    _PyErr_SetFromErrnoWithFilenameAndChain(NULL)
+
+
+/* alloc helpers ------------------------------------------------------------ */
+
+PyObject *_PyObject_GC_NEW(PyTypeObject *type);
+
+#define PyObject_GC_NEW(TYPE, type) ((TYPE *)_PyObject_GC_NEW(type))
+
+
+/* unicode helpers ---------------------------------------------------------- */
+
+#define _PyUnicode_DecodeFSDefault(bytes) \
+    PyUnicode_DecodeFSDefault(PyBytes_AS_STRING((bytes)))
 
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* !_Py_HELPERS_H */
+
+#endif // !Py_MOOD_HELPERS_H

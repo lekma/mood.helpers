@@ -1,79 +1,66 @@
-/*
-    Copyright © 2017 Malek Hadj-Ali
-
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
-
-
-#define PY_SSIZE_T_CLEAN
-#include "Python.h"
-
 #include "helpers.h"
 
 
-/* module init helpers */
+/* misc helpers ------------------------------------------------------------- */
 
-static inline int
-_PyModule_AddObject(PyObject *module, const char *name, PyObject *object)
+int
+_Py_READONLY_ATTRIBUTE(PyObject *self, PyObject *value, void *closure)
 {
-    Py_INCREF(object);
-    if (PyModule_AddObject(module, name, object)) {
-        Py_DECREF(object);
-        return -1;
-    }
-    return 0;
+    _Py_PROTECTED_ATTRIBUTE(value, -1);
+    PyErr_SetString(PyExc_AttributeError, "readonly attribute");
+    return -1;
 }
 
 
-int
-_PyModule_AddType(PyObject *module, const char *name, PyTypeObject *type)
-{
-    if (PyType_Ready(type)) {
-        return -1;
-    }
-    return _PyModule_AddObject(module, name, (PyObject *)type);
-}
-
+/* module init helpers ------------------------------------------------------ */
 
 int
-_PyModule_AddTypeWithBase(PyObject *module, const char *name,
-                          PyTypeObject *type, PyTypeObject *base)
+_PyType_ReadyWithBase(PyTypeObject *type, PyTypeObject *base)
 {
     type->tp_base = base;
-    return _PyModule_AddType(module, name, type);
+    return PyType_Ready(type);
 }
 
 
 int
-_PyModule_AddNewException(PyObject *module, const char *name,
-                          PyObject *base, PyObject *dict, PyObject **result)
+_PyModule_AddTypeWithBase(
+    PyObject *module, PyTypeObject *type, PyTypeObject *base
+)
 {
-    const char *module_name = NULL;
-    size_t full_size = 1; // dot
+    type->tp_base = base;
+    return PyModule_AddType(module, type);
+}
+
+
+int
+_PyModule_AddNewException(
+    PyObject *module,
+    const char *name,
+    const char *module_name,
+    PyObject *base,
+    PyObject *dict,
+    PyObject **result
+)
+{
+    const char *mod_name = NULL;
     char *full_name = NULL;
     PyObject *exception = NULL;
+    size_t name_size = 1, full_size = 1; // name_size: dot, full_size: terminator
+    int name_res = -1;
 
-    if (!(module_name = PyModule_GetName(module))) {
+    if (!(mod_name = (module_name) ? module_name : PyModule_GetName(module))) {
         return -1;
     }
-    full_size += strlen(module_name) + strlen(name);
-    if (!(full_name = PyObject_Malloc(full_size + 1))) { // terminator
+    name_size += (strlen(mod_name) + strlen(name));
+    full_size += name_size;
+    if (!(full_name = PyObject_Malloc(full_size))) {
         PyErr_NoMemory();
         return -1;
     }
-    if (PyOS_snprintf(full_name, full_size + 1,
-                      "%s.%s", module_name, name) != full_size) {
+    if (
+        ((name_res = PyOS_snprintf(full_name, full_size, "%s.%s", mod_name, name)) < 0) ||
+        ((size_t)name_res != name_size)
+    ) {
         PyObject_Free(full_name);
         if (errno) {
             PyErr_SetFromErrno(PyExc_OSError);
@@ -85,7 +72,7 @@ _PyModule_AddNewException(PyObject *module, const char *name,
     }
     exception = PyErr_NewException(full_name, base, dict);
     PyObject_Free(full_name);
-    if (!exception || _PyModule_AddObject(module, name, exception)) {
+    if (!exception || PyModule_AddObjectRef(module, name, exception)) {
         Py_XDECREF(exception);
         return -1;
     }
@@ -99,10 +86,31 @@ _PyModule_AddNewException(PyObject *module, const char *name,
 }
 
 
-/* module state helpers */
+int
+_PyModule_AddTypeFromSpec(
+    PyObject *module, PyType_Spec *spec, PyObject *bases, PyObject **result
+)
+{
+    PyObject *type = PyType_FromModuleAndSpec(module, spec, bases);
+
+    if (!type || PyModule_AddType(module, (PyTypeObject*)type)) {
+        Py_XDECREF(type);
+        return -1;
+    }
+    if (result) {
+        *result = type;
+    }
+    else {
+        Py_DECREF(type);
+    }
+    return 0;
+}
+
+
+/* module state helpers ----------------------------------------------------- */
 
 void *
-_PyModule_GetState(PyObject *module)
+__PyModule_GetState__(PyObject *module)
 {
     void *state = NULL;
 
@@ -114,21 +122,37 @@ _PyModule_GetState(PyObject *module)
 
 
 void *
-_PyModuleDef_GetState(PyModuleDef *def)
+__PyModuleDef_GetState__(PyModuleDef *def)
 {
     PyObject *module = NULL;
 
     if (!(module = PyState_FindModule(def))) { // borrowed
-        PyErr_Format(PyExc_SystemError,
-                     "<module '%s'> not found in interpreter state",
-                     def->m_name ? def->m_name : "unknown");
+        if (!PyErr_Occurred()) {
+            PyErr_Format(
+                PyExc_SystemError,
+                "<module '%s'> not found in interpreter state",
+                def->m_name ? def->m_name : "unknown"
+            );
+        }
         return NULL;
     }
-    return _PyModule_GetState(module);
+    return __PyModule_GetState__(module);
 }
 
 
-/* err helpers */
+void *
+__PyObject_GetState__(PyObject *self)
+{
+    PyObject *module = NULL;
+
+    if (!(module = PyType_GetModule(Py_TYPE(self)))) {
+        return NULL;
+    }
+    return __PyModule_GetState__(module);
+}
+
+
+/* err helpers -------------------------------------------------------------- */
 
 PyObject *
 _PyErr_SetFromErrnoWithFilename(const char *filename)
@@ -154,9 +178,15 @@ _PyErr_SetFromErrnoWithFilenameAndChain(const char *filename)
 }
 
 
-/* bytearray helpers */
+/* alloc helpers ------------------------------------------------------------ */
 
-#ifndef _PY_INLINE_HELPERS
-#include "bytearray.inl"
-#endif
+PyObject *
+_PyObject_GC_NEW(PyTypeObject *type)
+{
+    PyObject *obj = NULL;
 
+    if ((obj = _PyObject_GC_Calloc(_PyObject_SIZE(type)))) {
+        obj = PyObject_INIT(obj, type);
+    }
+    return obj;
+}

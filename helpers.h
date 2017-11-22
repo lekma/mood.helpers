@@ -45,7 +45,8 @@ _PyModule_AddTypeWithBase(PyObject *module, const char *name,
 
 int
 _PyModule_AddNewException(PyObject *module, const char *name,
-                          PyObject *base, PyObject *dict, PyObject **result);
+                          const char *module_name, PyObject *base,
+                          PyObject *dict, PyObject **result);
 
 #define _PyModule_AddIntMacro(m, c) \
     PyModule_AddIntConstant((m), #c, (int)(c))

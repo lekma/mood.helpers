@@ -64,23 +64,24 @@ _PyModule_AddTypeWithBase(PyObject *module, const char *name,
 
 int
 _PyModule_AddNewException(PyObject *module, const char *name,
-                          PyObject *base, PyObject *dict, PyObject **result)
+                          const char *module_name, PyObject *base,
+                          PyObject *dict, PyObject **result)
 {
-    const char *module_name = NULL;
-    size_t full_size = 1; // dot
+    const char *mod_name = NULL;
     char *full_name = NULL;
     PyObject *exception = NULL;
+    size_t full_size = 1; // dot
 
-    if (!(module_name = PyModule_GetName(module))) {
+    if (!(mod_name = (module_name) ? module_name : PyModule_GetName(module))) {
         return -1;
     }
-    full_size += strlen(module_name) + strlen(name);
+    full_size += strlen(mod_name) + strlen(name);
     if (!(full_name = PyObject_Malloc(full_size + 1))) { // terminator
         PyErr_NoMemory();
         return -1;
     }
     if (PyOS_snprintf(full_name, full_size + 1,
-                      "%s.%s", module_name, name) != full_size) {
+                      "%s.%s", mod_name, name) != full_size) {
         PyObject_Free(full_name);
         if (errno) {
             PyErr_SetFromErrno(PyExc_OSError);

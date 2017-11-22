@@ -24,6 +24,13 @@
 
 /* module init helpers */
 
+int
+_PyType_ReadyWithBase(PyTypeObject *type, PyTypeObject *base)
+{
+    type->tp_base = base;
+    return PyType_Ready(type);
+}
+
 static inline int
 _PyModule_AddObject(PyObject *module, const char *name, PyObject *object)
 {

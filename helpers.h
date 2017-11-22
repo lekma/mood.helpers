@@ -34,6 +34,9 @@ extern "C" {
 /* module init helpers */
 
 int
+_PyType_ReadyWithBase(PyTypeObject *type, PyTypeObject *base);
+
+int
 _PyModule_AddType(PyObject *module, const char *name, PyTypeObject *type);
 
 int

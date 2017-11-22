@@ -1,5 +1,6 @@
 _Py_INLINE(int)
-__PyByteArray_Grow(PyByteArrayObject *self, Py_ssize_t size, const char *bytes)
+__PyByteArray_Grow(PyByteArrayObject *self, Py_ssize_t size, const char *bytes,
+                   Py_ssize_t initsize)
 {
     Py_ssize_t osize, nsize, nalloc, alloc;
     char *tmp = NULL;
@@ -13,7 +14,7 @@ __PyByteArray_Grow(PyByteArrayObject *self, Py_ssize_t size, const char *bytes)
         return -1;
     }
     if (self->ob_alloc < nalloc) {
-        alloc = (self->ob_alloc) ? (self->ob_alloc << 1) : _Py_MIN_ALLOC;
+        alloc = (self->ob_alloc) ? (self->ob_alloc << 1) : initsize;
         while (alloc < nalloc) {
             alloc <<= 1;
             if (alloc < 0) {

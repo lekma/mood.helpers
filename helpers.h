@@ -114,7 +114,8 @@ __PyObject_GC_New(PyTypeObject *type);
 #include "bytearray.inl"
 #else
 int
-__PyByteArray_Grow(PyByteArrayObject *self, Py_ssize_t size, const char *bytes);
+__PyByteArray_Grow(PyByteArrayObject *self, Py_ssize_t size, const char *bytes,
+                   Py_ssize_t initsize);
 
 int
 __PyByteArray_Shrink(PyByteArrayObject *self, Py_ssize_t size);

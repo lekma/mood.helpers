@@ -112,6 +112,12 @@ __PyObject_GC_New(PyTypeObject *type);
 #define __PyObject_Alloc(type, typeobj) ((type *)__PyObject_GC_New((typeobj)))
 
 
+/* capsule helpers */
+
+void *
+_PyCapsule_Import(const char *name);
+
+
 /* bytearray helpers */
 
 #ifndef _Py_MIN_ALLOC

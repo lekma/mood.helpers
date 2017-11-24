@@ -1,18 +1,22 @@
 /*
-    Copyright © 2017 Malek Hadj-Ali
-
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
+# Copyright © 2017 Malek Hadj-Ali
+# All rights reserved.
+#
+# This file is part of mood.
+#
+# mood is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License version 3
+# as published by the Free Software Foundation.
+#
+# mood is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with mood.  If not, see <http://www.gnu.org/licenses/>.
+#
 */
 
 
@@ -174,6 +178,41 @@ __PyObject_GC_New(PyTypeObject *type)
         return PyErr_NoMemory();
     }
     return PyObject_INIT(self, type);
+}
+
+
+/* capsule helpers */
+
+void *
+_PyCapsule_Import(const char *name)
+{
+    PyObject *module = NULL, *capsule = NULL;
+    size_t name_len = strlen(name) + 1;
+    char *module_name = NULL, *attr_name = NULL;
+    void *result = NULL;
+
+    if (!(module_name = PyObject_Malloc(name_len))) {
+        PyErr_NoMemory();
+    }
+    else {
+        memcpy(module_name, name, name_len);
+        if (!(attr_name = strrchr(module_name, '.'))) {
+            PyErr_Format(PyExc_ImportError,
+                         "PyCapsule_Import malformed name '%s'", name);
+        }
+        else {
+            *attr_name++ = '\0';
+            if ((module = PyImport_ImportModule(module_name))) {
+                if ((capsule = PyObject_GetAttrString(module, attr_name))) {
+                    result = PyCapsule_GetPointer(capsule, name);
+                    Py_DECREF(capsule);
+                }
+                Py_DECREF(module);
+            }
+        }
+        PyObject_Free(module_name);
+    }
+    return result;
 }
 
 

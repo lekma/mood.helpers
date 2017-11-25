@@ -28,12 +28,13 @@ extern "C" {
 #endif
 
 
+#define _MSGPACK_MODULE_NAME  "mood.msgpack"
 #define _MSGPACK_CAPI_NAME    "CAPI"
-#define _MSGPACK_CAPSULE_NAME "mood.msgpack." _MSGPACK_CAPI_NAME
+#define _MSGPACK_CAPSULE_NAME _MSGPACK_MODULE_NAME "." _MSGPACK_CAPI_NAME
 
 typedef struct {
     int (*pack)(PyObject *, PyObject *);
-} msgpack_capi;
+} _Py_msgpack_CAPI;
 
 
 #ifdef __cplusplus

@@ -52,11 +52,17 @@ _PyModule_AddNewException(PyObject *module, const char *name,
                           const char *module_name, PyObject *base,
                           PyObject *dict, PyObject **result);
 
+#define _PyModule_AddIntConstant(m, n, v) \
+    PyModule_AddIntConstant((m), (n), (int)(v))
+
+#define _PyModule_AddUnsignedIntConstant(m, n, v) \
+    PyModule_AddIntConstant((m), (n), (unsigned int)(v))
+
 #define _PyModule_AddIntMacro(m, c) \
-    PyModule_AddIntConstant((m), #c, (int)(c))
+    _PyModule_AddIntConstant((m), #c, (c))
 
 #define _PyModule_AddUnsignedIntMacro(m, c) \
-    PyModule_AddIntConstant((m), #c, (unsigned int)(c))
+    _PyModule_AddUnsignedIntConstant((m), #c, (c))
 
 
 /* module state helpers */

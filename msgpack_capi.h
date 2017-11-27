@@ -30,11 +30,14 @@ extern "C" {
 
 /* these must be kept in sync with their msgpack equivalent */
 
-#define MSGPACK_INVALID 0xc1        // _MSGPACK_INVALID
-#define MSGPACK_LEN8    0xcc        // _MSGPACK_UINT8
-#define MSGPACK_LEN16   0xcd        // _MSGPACK_UINT16
-#define MSGPACK_LEN32   0xce        // _MSGPACK_UINT32
-#define MSGPACK_LEN_MAX (1LL << 32) // _MSGPACK_UINT32_MAX
+#define MSGPACK_INVALID 0xc1  // _MSGPACK_INVALID
+#define MSGPACK_LEN8    0xcc  // _MSGPACK_UINT8
+#define MSGPACK_LEN16   0xcd  // _MSGPACK_UINT16
+#define MSGPACK_LEN32   0xce  // _MSGPACK_UINT32
+
+#define MSGPACK_LEN8_MAX  (1LL << 8)   // _MSGPACK_UINT8_MAX
+#define MSGPACK_LEN16_MAX (1LL << 16)  // _MSGPACK_UINT16_MAX
+#define MSGPACK_LEN32_MAX (1LL << 32)  // _MSGPACK_UINT32_MAX
 
 
 /* CAPI */
@@ -45,7 +48,7 @@ extern "C" {
 
 typedef struct {
     int (*pack_obj)(PyObject *, PyObject *);
-    int (*pack_len)(PyObject *, Py_ssize_t, uint8_t *);
+    int (*pack_len)(PyObject *, uint8_t, Py_ssize_t);
     Py_ssize_t (*type_size)(uint8_t);
 } _Py_msgpack_CAPI;
 

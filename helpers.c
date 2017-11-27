@@ -192,26 +192,24 @@ _PyCapsule_Import(const char *name)
     void *result = NULL;
 
     if (!(module_name = PyObject_Malloc(name_len))) {
-        PyErr_NoMemory();
+        return PyErr_NoMemory();
+    }
+    memcpy(module_name, name, name_len);
+    if (!(attr_name = strrchr(module_name, '.'))) {
+        PyErr_Format(PyExc_ImportError,
+                     "PyCapsule_Import malformed name '%s'", name);
     }
     else {
-        memcpy(module_name, name, name_len);
-        if (!(attr_name = strrchr(module_name, '.'))) {
-            PyErr_Format(PyExc_ImportError,
-                         "PyCapsule_Import malformed name '%s'", name);
-        }
-        else {
-            *attr_name++ = '\0';
-            if ((module = PyImport_ImportModule(module_name))) {
-                if ((capsule = PyObject_GetAttrString(module, attr_name))) {
-                    result = PyCapsule_GetPointer(capsule, name);
-                    Py_DECREF(capsule);
-                }
-                Py_DECREF(module);
+        *attr_name++ = '\0';
+        if ((module = PyImport_ImportModule(module_name))) {
+            if ((capsule = PyObject_GetAttrString(module, attr_name))) {
+                result = PyCapsule_GetPointer(capsule, name);
+                Py_DECREF(capsule);
             }
+            Py_DECREF(module);
         }
-        PyObject_Free(module_name);
     }
+    PyObject_Free(module_name);
     return result;
 }
 

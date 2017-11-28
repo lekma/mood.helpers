@@ -141,6 +141,9 @@ int
 __PyByteArray_Shrink(PyByteArrayObject *self, Py_ssize_t size);
 #endif
 
+#define __pack__(m, s, b) \
+    __PyByteArray_Grow(((PyByteArrayObject *)(m)), (s), (b), _Py_MIN_ALLOC)
+
 
 #ifdef __cplusplus
 }

@@ -30,7 +30,7 @@ extern "C" {
 
 /* these must be kept in sync with their msgpack equivalent */
 
-#define MSGPACK_UNKNOWN 0xc1  // _MSGPACK_INVALID
+#define MSGPACK_INVALID 0xc1  // _MSGPACK_INVALID
 #define MSGPACK_LEN8    0xcc  // _MSGPACK_UINT8
 #define MSGPACK_LEN16   0xcd  // _MSGPACK_UINT16
 #define MSGPACK_LEN32   0xce  // _MSGPACK_UINT32

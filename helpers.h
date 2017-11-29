@@ -118,12 +118,6 @@ __PyObject_GC_New(PyTypeObject *type);
 #define __PyObject_Alloc(type, typeobj) ((type *)__PyObject_GC_New((typeobj)))
 
 
-/* capsule helpers */
-
-void *
-_PyCapsule_Import(const char *name);
-
-
 /* bytearray helpers */
 
 #ifndef _Py_MIN_ALLOC
@@ -140,9 +134,6 @@ __PyByteArray_Grow(PyByteArrayObject *self, Py_ssize_t size, const char *bytes,
 int
 __PyByteArray_Shrink(PyByteArrayObject *self, Py_ssize_t size);
 #endif
-
-#define __pack__(m, s, b) \
-    __PyByteArray_Grow(((PyByteArrayObject *)(m)), (s), (b), _Py_MIN_ALLOC)
 
 
 #ifdef __cplusplus

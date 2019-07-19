@@ -263,12 +263,38 @@ __PyObject_GC_New(PyTypeObject *type)
 
 /* bytearray helpers -------------------------------------------------------- */
 
+_Py_INLINE(PyObject *)
+__PyByteArray_Alloc(Py_ssize_t size)
+{
+    PyByteArrayObject *self = NULL;
+
+    if (size <= 0) {
+        PyErr_BadInternalCall();
+        return NULL;
+    }
+    if ((self = PyObject_New(PyByteArrayObject, &PyByteArray_Type))) {
+        if ((self->ob_bytes = PyObject_Malloc(size))) {
+            self->ob_start = self->ob_bytes;
+            self->ob_alloc = size;
+            self->ob_exports = 0;
+            Py_SIZE(self) = 0;
+            self->ob_bytes[0] = '\0';
+        }
+        else {
+            PyErr_NoMemory();
+            Py_CLEAR(self);
+        }
+    }
+    return (PyObject *)self;
+}
+
+
 _Py_INLINE(int)
 __PyByteArray_Grow(PyByteArrayObject *self, Py_ssize_t size, const char *bytes,
                    Py_ssize_t initsize)
 {
     Py_ssize_t osize, nsize, nalloc, alloc;
-    char *tmp = NULL;
+    void *tmp = NULL;
 
     if (size <= 0) {
         PyErr_BadInternalCall();
@@ -287,7 +313,7 @@ __PyByteArray_Grow(PyByteArrayObject *self, Py_ssize_t size, const char *bytes,
                 break;
             }
         }
-        if (!(tmp = (char *)PyObject_Realloc(self->ob_bytes, alloc))) {
+        if (!(tmp = PyObject_Realloc(self->ob_bytes, alloc))) {
             PyErr_NoMemory();
             return -1;
         }

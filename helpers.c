@@ -144,18 +144,21 @@ _PyModule_AddNewException(PyObject *module, const char *name,
     const char *mod_name = NULL;
     char *full_name = NULL;
     PyObject *exception = NULL;
-    size_t full_size = 1; // dot
+    size_t name_size = 1, full_size = 1; // name_size: dot, full_size: terminator
+    int name_res = -1;
 
     if (!(mod_name = (module_name) ? module_name : PyModule_GetName(module))) {
         return -1;
     }
-    full_size += strlen(mod_name) + strlen(name);
-    if (!(full_name = PyObject_Malloc(full_size + 1))) { // terminator
+    name_size += (strlen(mod_name) + strlen(name));
+    full_size += name_size;
+    if (!(full_name = PyObject_Malloc(full_size))) {
         PyErr_NoMemory();
         return -1;
     }
-    if (PyOS_snprintf(full_name, full_size + 1,
-                      "%s.%s", mod_name, name) != full_size) {
+    if (((name_res = PyOS_snprintf(full_name, full_size,
+                                   "%s.%s", mod_name, name)) < 0) ||
+        ((size_t)name_res != name_size)) {
         PyObject_Free(full_name);
         if (errno) {
             PyErr_SetFromErrno(PyExc_OSError);

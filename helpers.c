@@ -20,37 +20,10 @@
 */
 
 
-#ifdef _PY_INLINE_HELPERS
-#define _Py_INLINE(type) static inline type
-#else
-#define _Py_INLINE(type) type
-#endif
-
-#ifndef _Py_MIN_ALLOC
-#define _Py_MIN_ALLOC 8
-#endif
+#include "helpers.h"
 
 
 /* misc helpers ------------------------------------------------------------- */
-
-#define _Py_SET_MEMBER(m, op) \
-    do { \
-        PyObject *_py_tmp = (PyObject *)(m); \
-        Py_INCREF((op)); \
-        (m) = (op); \
-        Py_XDECREF(_py_tmp); \
-    } while (0)
-
-#define _Py_RETURN_OBJECT(op) \
-    do { \
-        PyObject *_py_res = (PyObject *)(op); \
-        return Py_INCREF(_py_res), _py_res; \
-    } while (0)
-
-#define _PyDict_GET_SIZE(op) (((PyDictObject *)(op))->ma_used)
-
-#define _PyTuple_ITEMS(op) (((PyTupleObject *)(op))->ob_item)
-
 
 /* the std PyObject_HasAttr clears traceback when result is 0 */
 int
@@ -84,19 +57,6 @@ __PyObject_HasAttrId(PyObject *obj, _Py_Identifier *id)
 
 /* module init helpers ------------------------------------------------------ */
 
-#define _PyModule_AddIntConstant(m, n, v) \
-    PyModule_AddIntConstant((m), (n), (int)(v))
-
-#define _PyModule_AddUnsignedIntConstant(m, n, v) \
-    PyModule_AddIntConstant((m), (n), (unsigned int)(v))
-
-#define _PyModule_AddIntMacro(m, c) \
-    _PyModule_AddIntConstant((m), #c, (c))
-
-#define _PyModule_AddUnsignedIntMacro(m, c) \
-    _PyModule_AddUnsignedIntConstant((m), #c, (c))
-
-
 int
 _PyType_ReadyWithBase(PyTypeObject *type, PyTypeObject *base)
 {
@@ -123,7 +83,7 @@ _PyModule_AddType(PyObject *module, const char *name, PyTypeObject *type)
     if (PyType_Ready(type)) {
         return -1;
     }
-    return _PyModule_AddObject(module, name, (PyObject *)type);
+    return _PyModule_AddObject(module, name, _PyObject_CAST(type));
 }
 
 
@@ -239,13 +199,6 @@ _PyErr_SetFromErrnoWithFilenameAndChain(const char *filename)
 }
 
 
-#define _PyErr_SetFromErrno() \
-    _PyErr_SetFromErrnoWithFilename(NULL)
-
-#define _PyErr_SetFromErrnoAndChain() \
-    _PyErr_SetFromErrnoWithFilenameAndChain(NULL)
-
-
 /* alloc helpers ------------------------------------------------------------ */
 
 /* the std _PyObject_GC_New doesn't memset -> segfault when subclassing */
@@ -258,93 +211,4 @@ __PyObject_GC_New(PyTypeObject *type)
         return PyErr_NoMemory();
     }
     return PyObject_INIT(self, type);
-}
-
-
-#define __PyObject_Alloc(type, typeobj) ((type *)__PyObject_GC_New((typeobj)))
-
-
-/* bytearray helpers -------------------------------------------------------- */
-
-_Py_INLINE(PyObject *)
-__PyByteArray_Alloc(Py_ssize_t size)
-{
-    PyByteArrayObject *self = NULL;
-
-    if (size <= 0) {
-        PyErr_BadInternalCall();
-        return NULL;
-    }
-    if ((self = PyObject_New(PyByteArrayObject, &PyByteArray_Type))) {
-        if ((self->ob_bytes = PyObject_Malloc(size))) {
-            self->ob_start = self->ob_bytes;
-            self->ob_alloc = size;
-            self->ob_exports = 0;
-            Py_SIZE(self) = 0;
-            self->ob_bytes[0] = '\0';
-        }
-        else {
-            PyErr_NoMemory();
-            Py_CLEAR(self);
-        }
-    }
-    return (PyObject *)self;
-}
-
-
-_Py_INLINE(int)
-__PyByteArray_Grow(PyByteArrayObject *self, Py_ssize_t size, const char *bytes,
-                   Py_ssize_t initsize)
-{
-    Py_ssize_t osize, nsize, nalloc, alloc;
-    void *tmp = NULL;
-
-    if (size <= 0) {
-        PyErr_BadInternalCall();
-        return -1;
-    }
-    if ((nalloc = ((nsize = ((osize = Py_SIZE(self)) + size)) + 1)) < 0) {
-        PyErr_NoMemory();
-        return -1;
-    }
-    if (self->ob_alloc < nalloc) {
-        alloc = (self->ob_alloc) ? (self->ob_alloc << 1) : initsize;
-        while (alloc < nalloc) {
-            alloc <<= 1;
-            if (alloc < 0) {
-                alloc = nalloc;
-                break;
-            }
-        }
-        if (!(tmp = PyObject_Realloc(self->ob_bytes, alloc))) {
-            PyErr_NoMemory();
-            return -1;
-        }
-        self->ob_bytes = self->ob_start = tmp;
-        self->ob_alloc = alloc;
-    }
-    memcpy((self->ob_bytes + osize), bytes, size);
-    Py_SIZE(self) = nsize;
-    self->ob_bytes[nsize] = '\0';
-    return 0;
-}
-
-
-_Py_INLINE(int)
-__PyByteArray_Shrink(PyByteArrayObject *self, Py_ssize_t size)
-{
-    Py_ssize_t nsize = Py_SIZE(self) - size;
-    char *buf = PyByteArray_AS_STRING(self);
-
-    if (nsize < 0) {
-        PyErr_BadInternalCall();
-        return -1;
-    }
-    if (nsize > 0) {
-        memmove(buf, buf + size, nsize);
-    }
-    // XXX: very bad shortcut ¯\_(ツ)_/¯
-    Py_SIZE(self) = nsize;
-    PyByteArray_AS_STRING(self)[nsize] = '\0';
-    return 0;
 }

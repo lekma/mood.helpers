@@ -37,20 +37,6 @@ extern "C" {
 
 #define __Py_INCREF(op) (_Py_INCREF((op)), (op))
 
-#define _Py_ASSIGN_MEMBER(m, op) \
-    do { \
-        PyObject *_py_old = _PyObject_CAST(m); \
-        PyObject *_py_new = _PyObject_CAST(op); \
-        (m) = __Py_INCREF(_py_new)); \
-        _Py_XDECREF(_py_old); \
-    } while (0)
-
-#define _Py_RETURN_OBJECT(op) \
-    do { \
-        PyObject *_py_res = _PyObject_CAST(op); \
-        return __Py_INCREF(_py_res); \
-    } while (0)
-
 
 #define _PyTuple_ITEMS(op) (((PyTupleObject *)(op))->ob_item)
 

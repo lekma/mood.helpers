@@ -20,8 +20,8 @@
 */
 
 
-#ifndef __Py_MOOD_HELPERS_H__
-#define __Py_MOOD_HELPERS_H__
+#ifndef Py_MOOD_HELPERS_H
+#define Py_MOOD_HELPERS_H
 
 
 #ifdef __cplusplus
@@ -106,4 +106,4 @@ PyObject *__PyObject_GC_New(PyTypeObject *type);
 #endif
 
 
-#endif // !__Py_MOOD_HELPERS_H__
+#endif // !Py_MOOD_HELPERS_H

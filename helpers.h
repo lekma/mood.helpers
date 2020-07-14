@@ -24,13 +24,13 @@
 #define Py_MOOD_HELPERS_H
 
 
+#define PY_SSIZE_T_CLEAN
+#include "Python.h"
+
+
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-
-#define PY_SSIZE_T_CLEAN
-#include "Python.h"
 
 
 /* misc helpers ------------------------------------------------------------- */

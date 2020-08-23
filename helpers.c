@@ -23,38 +23,6 @@
 #include "helpers.h"
 
 
-/* misc helpers ------------------------------------------------------------- */
-
-/* the std PyObject_HasAttr clears traceback when result is 0 */
-int
-_PyObject_HasAttr(PyObject *obj, PyObject *name)
-{
-    PyObject *exc_type = NULL, *exc_value = NULL, *exc_traceback = NULL;
-    PyObject *attr = NULL;
-    int res = 0;
-
-    PyErr_Fetch(&exc_type, &exc_value, &exc_traceback);
-    if ((res = ((attr = PyObject_GetAttr(obj, name)) != NULL))) {
-        Py_DECREF(attr);
-    }
-    else {
-        PyErr_Clear();
-    }
-    PyErr_Restore(exc_type, exc_value, exc_traceback);
-    return res;
-}
-
-
-int
-__PyObject_HasAttrId(PyObject *obj, _Py_Identifier *id)
-{
-    PyObject *name = NULL;
-
-    // name is borrowed
-    return ((name = _PyUnicode_FromId(id))) ? _PyObject_HasAttr(obj, name) : -1;
-}
-
-
 /* module init helpers ------------------------------------------------------ */
 
 int

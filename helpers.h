@@ -41,12 +41,6 @@ extern "C" {
 #define _PyTuple_ITEMS(op) (((PyTupleObject *)(op))->ob_item)
 
 
-/* the std PyObject_HasAttr clears traceback when result is 0 */
-int _PyObject_HasAttr(PyObject *obj, PyObject *name);
-
-int __PyObject_HasAttrId(PyObject *obj, _Py_Identifier *id);
-
-
 /* module init helpers ------------------------------------------------------ */
 
 #define _PyModule_AddIntConstant(m, n, v) \

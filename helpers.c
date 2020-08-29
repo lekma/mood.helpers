@@ -165,18 +165,3 @@ _PyErr_SetFromErrnoWithFilenameAndChain(const char *filename)
     _PyErr_ChainExceptions(exc_type, exc_value, exc_traceback);
     return NULL;
 }
-
-
-/* alloc helpers ------------------------------------------------------------ */
-
-/* the std _PyObject_GC_New doesn't memset -> segfault when subclassing */
-PyObject *
-__PyObject_GC_New(PyTypeObject *type)
-{
-    PyObject *self = NULL;
-
-    if (!(self = _PyObject_GC_Calloc(_PyObject_SIZE(type)))) {
-        return PyErr_NoMemory();
-    }
-    return PyObject_INIT(self, type);
-}

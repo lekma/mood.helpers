@@ -88,13 +88,6 @@ PyObject *_PyErr_SetFromErrnoWithFilenameAndChain(const char *filename);
     _PyErr_SetFromErrnoWithFilenameAndChain(NULL)
 
 
-/* alloc helpers ------------------------------------------------------------ */
-
-PyObject *__PyObject_GC_New(PyTypeObject *type);
-
-#define __PyObject_Alloc(type, typeobj) ((type *)__PyObject_GC_New((typeobj)))
-
-
 #ifdef __cplusplus
 }
 #endif

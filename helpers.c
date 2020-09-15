@@ -23,6 +23,17 @@
 #include "helpers.h"
 
 
+/* misc helpers ------------------------------------------------------------- */
+
+int
+_Py_READONLY_ATTRIBUTE(PyObject *self, PyObject *value, void *closure)
+{
+    _Py_PROTECTED_ATTRIBUTE(value, -1);
+    PyErr_SetString(PyExc_AttributeError, "readonly attribute");
+    return -1;
+}
+
+
 /* module init helpers ------------------------------------------------------ */
 
 int

@@ -41,6 +41,17 @@ extern "C" {
 #define _PyTuple_ITEMS(op) (((PyTupleObject *)(op))->ob_item)
 
 
+#define _Py_PROTECTED_ATTRIBUTE(v, r) \
+    do { \
+        if ((v) == NULL) { \
+            PyErr_SetString(PyExc_AttributeError, "cannot delete attribute"); \
+            return (r); \
+        } \
+    } while (0)
+
+int _Py_READONLY_ATTRIBUTE(PyObject *self, PyObject *value, void *closure);
+
+
 /* module init helpers ------------------------------------------------------ */
 
 #define _PyModule_AddIntConstant(m, n, v) \

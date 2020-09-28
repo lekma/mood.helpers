@@ -176,3 +176,17 @@ _PyErr_SetFromErrnoWithFilenameAndChain(const char *filename)
     _PyErr_ChainExceptions(exc_type, exc_value, exc_traceback);
     return NULL;
 }
+
+
+/* alloc helpers ------------------------------------------------------------ */
+
+PyObject *
+_PyObject_GC_NEW(PyTypeObject *type)
+{
+    PyObject *obj = NULL;
+
+    if ((obj = _PyObject_GC_Calloc(_PyObject_SIZE(type)))) {
+        obj = PyObject_INIT(obj, type);
+    }
+    return obj;
+}

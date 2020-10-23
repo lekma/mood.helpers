@@ -52,6 +52,15 @@ extern "C" {
 int _Py_READONLY_ATTRIBUTE(PyObject *self, PyObject *value, void *closure);
 
 
+#define _Py_SET_MEMBER(m, op) \
+    do { \
+        PyObject *_py_tmp = (PyObject *)(m); \
+        Py_INCREF((op)); \
+        (m) = (op); \
+        Py_XDECREF(_py_tmp); \
+    } while (0)
+
+
 /* module init helpers ------------------------------------------------------ */
 
 #define _PyModule_AddIntConstant(m, n, v) \

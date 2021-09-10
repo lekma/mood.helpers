@@ -1,6 +1,6 @@
 /*
 #
-# Copyright © 2020 Malek Hadj-Ali
+# Copyright © 2021 Malek Hadj-Ali
 # All rights reserved.
 #
 # This file is part of mood.
@@ -80,12 +80,14 @@ int _PyType_ReadyWithBase(PyTypeObject *type, PyTypeObject *base);
 
 int _PyModule_AddType(PyObject *module, const char *name, PyTypeObject *type);
 
-int _PyModule_AddTypeWithBase(PyObject *module, const char *name,
-                              PyTypeObject *type, PyTypeObject *base);
+int _PyModule_AddTypeWithBase(
+    PyObject *module, const char *name, PyTypeObject *type, PyTypeObject *base
+);
 
-int _PyModule_AddNewException(PyObject *module, const char *name,
-                              const char *module_name, PyObject *base,
-                              PyObject *dict, PyObject **result);
+int _PyModule_AddNewException(
+    PyObject *module, const char *name, const char *module_name, PyObject *base,
+    PyObject *dict, PyObject **result
+);
 
 
 /* module state helpers ----------------------------------------------------- */

@@ -1,6 +1,6 @@
 /*
 #
-# Copyright © 2020 Malek Hadj-Ali
+# Copyright © 2021 Malek Hadj-Ali
 # All rights reserved.
 #
 # This file is part of mood.
@@ -67,8 +67,9 @@ _PyModule_AddType(PyObject *module, const char *name, PyTypeObject *type)
 
 
 int
-_PyModule_AddTypeWithBase(PyObject *module, const char *name,
-                          PyTypeObject *type, PyTypeObject *base)
+_PyModule_AddTypeWithBase(
+    PyObject *module, const char *name, PyTypeObject *type, PyTypeObject *base
+)
 {
     type->tp_base = base;
     return _PyModule_AddType(module, name, type);
@@ -76,9 +77,10 @@ _PyModule_AddTypeWithBase(PyObject *module, const char *name,
 
 
 int
-_PyModule_AddNewException(PyObject *module, const char *name,
-                          const char *module_name, PyObject *base,
-                          PyObject *dict, PyObject **result)
+_PyModule_AddNewException(
+    PyObject *module, const char *name, const char *module_name, PyObject *base,
+    PyObject *dict, PyObject **result
+)
 {
     const char *mod_name = NULL;
     char *full_name = NULL;
@@ -95,9 +97,10 @@ _PyModule_AddNewException(PyObject *module, const char *name,
         PyErr_NoMemory();
         return -1;
     }
-    if (((name_res = PyOS_snprintf(full_name, full_size,
-                                   "%s.%s", mod_name, name)) < 0) ||
-        ((size_t)name_res != name_size)) {
+    if (
+        ((name_res = PyOS_snprintf(full_name, full_size, "%s.%s", mod_name, name)) < 0) ||
+        ((size_t)name_res != name_size)
+    ) {
         PyObject_Free(full_name);
         if (errno) {
             PyErr_SetFromErrno(PyExc_OSError);
@@ -143,9 +146,10 @@ _PyModuleDef_GetState(PyModuleDef *def)
     PyObject *module = NULL;
 
     if (!(module = PyState_FindModule(def))) { // borrowed
-        PyErr_Format(PyExc_SystemError,
-                     "<module '%s'> not found in interpreter state",
-                     def->m_name ? def->m_name : "unknown");
+        PyErr_Format(
+            PyExc_SystemError, "<module '%s'> not found in interpreter state",
+            def->m_name ? def->m_name : "unknown"
+        );
         return NULL;
     }
     return _PyModule_GetState(module);

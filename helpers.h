@@ -39,6 +39,7 @@ extern "C" {
 
 
 #define _PyTuple_ITEMS(op) (((PyTupleObject *)(op))->ob_item)
+#define _PyList_ITEMS(op) (((PyListObject *)(op))->ob_item)
 
 
 #define _Py_PROTECTED_ATTRIBUTE(v, r) \

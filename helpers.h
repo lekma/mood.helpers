@@ -1,25 +1,3 @@
-/*
-#
-# Copyright © 2021 Malek Hadj-Ali
-# All rights reserved.
-#
-# This file is part of mood.
-#
-# mood is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License version 3
-# as published by the Free Software Foundation.
-#
-# mood is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with mood.  If not, see <http://www.gnu.org/licenses/>.
-#
-*/
-
-
 #ifndef Py_MOOD_HELPERS_H
 #define Py_MOOD_HELPERS_H
 
@@ -34,9 +12,6 @@ extern "C" {
 
 
 /* misc helpers ------------------------------------------------------------- */
-
-#define __Py_INCREF(op) (_Py_INCREF((op)), (op))
-
 
 #define _PyTuple_ITEMS(op) (((PyTupleObject *)(op))->ob_item)
 #define _PyList_ITEMS(op) (((PyListObject *)(op))->ob_item)
@@ -116,6 +91,12 @@ PyObject *_PyErr_SetFromErrnoWithFilenameAndChain(const char *filename);
 PyObject *_PyObject_GC_NEW(PyTypeObject *type);
 
 #define PyObject_GC_NEW(TYPE, type) ((TYPE *)_PyObject_GC_NEW(type))
+
+
+/* unicode helpers ---------------------------------------------------------- */
+
+#define _PyUnicode_DecodeFSDefault(op) \
+    PyUnicode_DecodeFSDefault(PyBytes_AS_STRING((op)))
 
 
 #ifdef __cplusplus

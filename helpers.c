@@ -1,25 +1,3 @@
-/*
-#
-# Copyright © 2021 Malek Hadj-Ali
-# All rights reserved.
-#
-# This file is part of mood.
-#
-# mood is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License version 3
-# as published by the Free Software Foundation.
-#
-# mood is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with mood.  If not, see <http://www.gnu.org/licenses/>.
-#
-*/
-
-
 #include "helpers.h"
 
 
@@ -44,25 +22,13 @@ _PyType_ReadyWithBase(PyTypeObject *type, PyTypeObject *base)
 }
 
 
-static inline int
-_PyModule_AddObject(PyObject *module, const char *name, PyObject *object)
-{
-    Py_INCREF(object);
-    if (PyModule_AddObject(module, name, object)) {
-        Py_DECREF(object);
-        return -1;
-    }
-    return 0;
-}
-
-
 int
 _PyModule_AddType(PyObject *module, const char *name, PyTypeObject *type)
 {
     if (PyType_Ready(type)) {
         return -1;
     }
-    return _PyModule_AddObject(module, name, _PyObject_CAST(type));
+    return PyModule_AddObjectRef(module, name, _PyObject_CAST(type));
 }
 
 
@@ -112,7 +78,7 @@ _PyModule_AddNewException(
     }
     exception = PyErr_NewException(full_name, base, dict);
     PyObject_Free(full_name);
-    if (!exception || _PyModule_AddObject(module, name, exception)) {
+    if (!exception || PyModule_AddObjectRef(module, name, exception)) {
         Py_XDECREF(exception);
         return -1;
     }

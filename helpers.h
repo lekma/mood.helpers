@@ -54,10 +54,8 @@ int _Py_READONLY_ATTRIBUTE(PyObject *self, PyObject *value, void *closure);
 
 int _PyType_ReadyWithBase(PyTypeObject *type, PyTypeObject *base);
 
-int _PyModule_AddType(PyObject *module, const char *name, PyTypeObject *type);
-
 int _PyModule_AddTypeWithBase(
-    PyObject *module, const char *name, PyTypeObject *type, PyTypeObject *base
+    PyObject *module, PyTypeObject *type, PyTypeObject *base
 );
 
 int _PyModule_AddNewException(
@@ -68,9 +66,11 @@ int _PyModule_AddNewException(
 
 /* module state helpers ----------------------------------------------------- */
 
-void *_PyModule_GetState(PyObject *module);
+void *__PyModule_GetState__(PyObject *module);
 
-void *_PyModuleDef_GetState(PyModuleDef *def);
+void *__PyModuleDef_GetState__(PyModuleDef *def);
+
+void *__PyObject_GetState__(PyObject *self);
 
 
 /* err helpers -------------------------------------------------------------- */
@@ -95,8 +95,8 @@ PyObject *_PyObject_GC_NEW(PyTypeObject *type);
 
 /* unicode helpers ---------------------------------------------------------- */
 
-#define _PyUnicode_DecodeFSDefault(op) \
-    PyUnicode_DecodeFSDefault(PyBytes_AS_STRING((op)))
+#define _PyUnicode_DecodeFSDefault(bytes) \
+    PyUnicode_DecodeFSDefault(PyBytes_AS_STRING((bytes)))
 
 
 #ifdef __cplusplus

@@ -23,22 +23,12 @@ _PyType_ReadyWithBase(PyTypeObject *type, PyTypeObject *base)
 
 
 int
-_PyModule_AddType(PyObject *module, const char *name, PyTypeObject *type)
-{
-    if (PyType_Ready(type)) {
-        return -1;
-    }
-    return PyModule_AddObjectRef(module, name, _PyObject_CAST(type));
-}
-
-
-int
 _PyModule_AddTypeWithBase(
-    PyObject *module, const char *name, PyTypeObject *type, PyTypeObject *base
+    PyObject *module, PyTypeObject *type, PyTypeObject *base
 )
 {
     type->tp_base = base;
-    return _PyModule_AddType(module, name, type);
+    return PyModule_AddType(module, type);
 }
 
 
@@ -95,7 +85,7 @@ _PyModule_AddNewException(
 /* module state helpers ----------------------------------------------------- */
 
 void *
-_PyModule_GetState(PyObject *module)
+__PyModule_GetState__(PyObject *module)
 {
     void *state = NULL;
 
@@ -107,18 +97,33 @@ _PyModule_GetState(PyObject *module)
 
 
 void *
-_PyModuleDef_GetState(PyModuleDef *def)
+__PyModuleDef_GetState__(PyModuleDef *def)
 {
     PyObject *module = NULL;
 
     if (!(module = PyState_FindModule(def))) { // borrowed
-        PyErr_Format(
-            PyExc_SystemError, "<module '%s'> not found in interpreter state",
-            def->m_name ? def->m_name : "unknown"
-        );
+        if (!PyErr_Occurred()) {
+            PyErr_Format(
+                PyExc_SystemError,
+                "<module '%s'> not found in interpreter state",
+                def->m_name ? def->m_name : "unknown"
+            );
+        }
         return NULL;
     }
-    return _PyModule_GetState(module);
+    return __PyModule_GetState__(module);
+}
+
+
+void *
+__PyObject_GetState__(PyObject *self)
+{
+    PyObject *module = NULL;
+
+    if (!(module = PyType_GetModule(Py_TYPE(self)))) {
+        return NULL;
+    }
+    return __PyModule_GetState__(module);
 }
 
 

@@ -34,8 +34,12 @@ _PyModule_AddTypeWithBase(
 
 int
 _PyModule_AddNewException(
-    PyObject *module, const char *name, const char *module_name, PyObject *base,
-    PyObject *dict, PyObject **result
+    PyObject *module,
+    const char *name,
+    const char *module_name,
+    PyObject *base,
+    PyObject *dict,
+    PyObject **result
 )
 {
     const char *mod_name = NULL;
@@ -77,6 +81,27 @@ _PyModule_AddNewException(
     }
     else {
         Py_DECREF(exception);
+    }
+    return 0;
+}
+
+
+int
+_PyModule_AddTypeFromSpec(
+    PyObject *module, PyType_Spec *spec, PyObject *bases, PyObject **result
+)
+{
+    PyObject *type = PyType_FromModuleAndSpec(module, spec, bases);
+
+    if (!type || PyModule_AddType(module, (PyTypeObject*)type)) {
+        Py_XDECREF(type);
+        return -1;
+    }
+    if (result) {
+        *result = type;
+    }
+    else {
+        Py_DECREF(type);
     }
     return 0;
 }

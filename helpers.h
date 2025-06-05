@@ -59,8 +59,16 @@ int _PyModule_AddTypeWithBase(
 );
 
 int _PyModule_AddNewException(
-    PyObject *module, const char *name, const char *module_name, PyObject *base,
-    PyObject *dict, PyObject **result
+    PyObject *module,
+    const char *name,
+    const char *module_name,
+    PyObject *base,
+    PyObject *dict,
+    PyObject **result
+);
+
+int _PyModule_AddTypeFromSpec(
+    PyObject *module, PyType_Spec *spec, PyObject *bases, PyObject **result
 );
 
 
